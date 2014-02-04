@@ -1,0 +1,23 @@
+- name: restart eventstore
+  debug: msg='Restarting eventstore'
+  changed_when: true
+  notify:
+    - stop eventstore
+    - wait for stop eventstore
+    - start eventstore
+
+- name: stop eventstore
+  sudo: true
+  action: service name=eventstore state=stopped
+
+- name: wait for stop eventstore
+  sudo: true
+  wait_for: >
+    port={{ eventstore.config.httpPort | default(2113) }}
+    state=stopped
+    timeout=10
+
+- name: start eventstore
+  sudo: true
+  action: service name=eventstore state=started
+

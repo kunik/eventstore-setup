@@ -1,0 +1,4 @@
+- hosts: eventstore
+  roles:
+    - eventstore
+

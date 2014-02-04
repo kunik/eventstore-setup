@@ -1,0 +1,78 @@
+- name: install prerequisites
+  sudo: true
+  apt: pkg={{ item }}
+  with_items:
+    - gcc
+    - git
+    - subversion
+#   - libv8-dev
+
+- name: download
+  get_url: >
+    url={{ eventstore.gz }}
+    sha256sum={{ eventstore.gz_sha256 }}
+    dest={{ eventstore.temp_store }}
+
+- name: create directory
+  sudo: true
+  file: >
+    dest={{ eventstore.dir }}
+    state=directory
+    owner=root
+    group=root
+    mode=0755
+
+- name: decompress
+  command: >
+    tar -xf {{ eventstore.temp_store }}
+    chdir={{ eventstore.dir }}
+    creates={{ eventstore.dir }}/EventStore.SingleNode.exe
+
+###
+#  build_options:
+#    platform: x64
+#    configuration: release
+#    version: 0.0.0.0
+#    target: full
+#
+#- name: build
+#  command: >
+#    ./build.sh {{ eventstore.build_options.target }} {{ eventstore.build_options.version }} {{ eventstore.build_options.platform }} {{ eventstore.build_options.configuration }}
+#    chdir={{ eventstore.dir }}
+
+- name: create directory
+  sudo: true
+  file: >
+    dest={{ item }}
+    state=directory
+    owner=root
+    group=root
+    mode=0755
+  with_items:
+    - eventstore.config.logsdir
+    - eventstore.config.db
+
+- name: generate upstart script
+  sudo: true
+  template: >
+    src=init.conf.j2
+    dest=/etc/init/eventstore.conf
+    mode=0644
+  notify: restart eventstore
+
+- name: generate init script
+  sudo: true
+  template: >
+    src=init.d.j2
+    dest=/etc/init.d/eventstore
+    mode=0644
+  notify: restart eventstore
+
+- name: generate config
+  sudo: true
+  template: >
+    src=config.json.j2
+    dest={{ eventstore.dir }}/config.json
+    mode=0644
+  notify: restart eventstore
+

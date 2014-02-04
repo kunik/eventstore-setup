@@ -1,0 +1,14 @@
+eventstore:
+  gz: http://download.geteventstore.com/binaries/eventstore-mono-2.0.1.tgz
+  gz_sha256: 4b1ec18af643ec60bf6a0574b4a363727d5074cd17f0df45f4df23b352501020
+  temp_store: /tmp/eventstore.tgz
+  dir: /opt/eventstore
+  config:
+    logsdir: /var/log/eventstore
+    db: /var/lib/eventstore
+    ip: 127.0.0.1
+    internalIp: 127.0.0.1
+    externalIp: 162.243.23.248
+    httpPort: 2113
+    tcpPort: 1113
+    runProjections: system

@@ -1,0 +1,7 @@
+mono:
+  version: 3.2.3
+  gz: http://download.mono-project.com/sources/mono/mono-3.2.3.tar.bz2
+  gz_sha256: b8c2f97d6a5232dbf5a8180e5c38d4722b81af748893649d7d9e82c5cf8ef41a
+  temp_store: /tmp/mono-3.2.3.tar.bz2
+  dir: /opt/mono
+  libgdiplus_repo: https://github.com/mono/libgdiplus.git

@@ -1,0 +1,114 @@
+- name: install prerequisites
+  sudo: true
+  apt: pkg={{ item }}
+  with_items:
+    - libpng3
+    - libpng12-dev
+    - libtool
+    - libtiff4
+    - libtiff4-dev
+    - libexif12
+    - libexif-dev
+    - libgif4
+    - libgif-dev
+    - libpango1.0-dev
+    - libatk1.0-dev
+    - libgtk-3-0
+    - libgtk-3-dev
+    - bison
+    - automake
+    - autoconf
+    - make
+    - gcc
+    - gtk-sharp2
+    - build-essential
+    - xorg-dev
+    - libfreetype6
+    - libfontconfig1
+    - libfontconfig1-dev
+    - gettext
+    - libglib2.0-dev
+    - git
+    - mono-complete
+    - libjpeg-dev
+    - libjpeg8-dev
+    - libjpeg-turbo8-dev
+
+- name: create directory
+  sudo: true
+  file: >
+    dest={{ mono.dir }}
+    state=directory
+    owner=root
+    group=root
+    mode=0755
+
+- name: git clone mono/libgdiplus
+  sudo: true
+  git: >
+    repo={{ mono.libgdiplus_repo }}
+    dest={{ mono.dir }}/libgdiplus
+# register: libgdiplus_source
+
+#- name: libgdiplus | reset build
+#  command: >
+#    rm -f {{ mono.dir }}/libgdiplus/Makefile {{ mono.dir }}/libgdiplus/src/wmfcodec.o {{ mono.dir }}/lib/libgdiplus.so
+#  when: libgdiplus_source | changed
+
+- name: libgdiplus | generate makefile
+  command: >
+    ./autogen.sh --prefix={{ mono.dir }} --libdir={{ mono.dir }}/lib
+    chdir={{ mono.dir }}/libgdiplus
+    creates={{ mono.dir }}/libgdiplus/Makefile
+
+- name: libgdiplus | make
+  command: >
+    make
+    chdir={{ mono.dir }}/libgdiplus
+    creates={{ mono.dir }}/libgdiplus/src/wmfcodec.o
+
+- name: libgdiplus | make install
+  sudo: true
+  command: >
+    make install
+    chdir={{ mono.dir }}/libgdiplus
+    creates={{ mono.dir }}/lib/libgdiplus.so
+
+- name: download
+  get_url: >
+    url={{ mono.gz }}
+    sha256sum={{ mono.gz_sha256 }}
+    dest={{ mono.temp_store }}
+
+- name: decompress
+  command: >
+    tar -xf {{ mono.temp_store }}
+    chdir={{ mono.dir }}
+    creates={{ mono.dir }}/mono-{{ mono.version }}
+
+- name: generate makefile
+  command: >
+    ./autogen.sh --prefix={{ mono.dir }} --libdir={{ mono.dir }}/lib
+    chdir={{ mono.dir }}/mono-{{ mono.version }}
+    creates={{ mono.dir }}/mono-{{ mono.version }}/Makefile
+
+- name: make
+  command: >
+    make
+    chdir={{ mono.dir }}/mono-{{ mono.version }}
+    creates={{ mono.dir }}/mono-{{ mono.version }}/mono/io-layer/wthreads.o
+
+- name: make install
+  sudo: true
+  command: >
+    make install
+    chdir={{ mono.dir }}/mono-{{ mono.version }}
+    creates={{ mono.dir }}/lib/mono
+
+- name: generate rc file
+  sudo: true
+  template: >
+    src=monorc.sh.j2
+    dest=/etc/profile.d/monorc.sh
+    mode=0644
+

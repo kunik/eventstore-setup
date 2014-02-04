@@ -1,0 +1,25 @@
+# EventStore Service
+
+description     "EventStore Server"
+author          "Taras Kunch <taras.kunch@gmail.com>"
+
+start on runlevel [2345]
+stop on starting rc RUNLEVEL=[016]
+
+#setuid nobody
+#setgid nogroup
+console log
+respawn
+respawn limit 2 5
+
+env HOME={{ eventstore.dir }}
+env CONFIGS={{ eventstore.dir }}
+umask 007
+
+# MONO
+kill timeout 300
+
+script
+  /opt/mono/bin/mono-sgen $HOME/EventStore.SingleNode.exe
+end script
+
